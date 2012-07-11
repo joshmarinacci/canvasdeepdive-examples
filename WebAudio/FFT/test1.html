@@ -1,0 +1,53 @@
+<html>
+<head>
+<script type='text/javascript'>
+
+
+var ctx; //audio context
+var buf; //audio buffer
+
+
+//init the sound system
+function init() {
+    console.log("in init");
+    try {
+        ctx = new webkitAudioContext(); //is there a better API for this?
+        loadFile();
+    } catch(e) {
+        alert('you need webaudio support');
+    }
+}
+window.addEventListener('load',init,false);
+
+//load the mp3 file
+function loadFile() {
+    var req = new XMLHttpRequest();
+    req.open("GET","music.mp3",true);
+    req.responseType = "arraybuffer";
+    req.onload = function() {
+        //decode the loaded data
+        ctx.decodeAudioData(req.response, function(buffer) {
+            buf = buffer;
+            play();
+        });
+    };
+    req.send();
+}
+
+//play the loaded file
+function play() {
+    //create a source node from the buffer
+    var src = ctx.createBufferSource(); 
+    src.buffer = buf;
+    //connect to the final output node (the speakers)
+    src.connect(ctx.destination);
+    //play immediately
+    src.noteOn(0);
+}
+
+</script>
+</head>
+<body>
+
+</body>
+</html>
