@@ -1,0 +1,227 @@
+<!doctype html>
+<html>
+	<head>
+		<title>learningthree.js boiler plate for three.js</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		
+			
+		<script src="vendor/three.js/Three.js"></script>
+		<script src="vendor/three.js/Detector.js"></script>
+		<!-- https://github.com/mrdoob/stats.js -->
+		<script src="vendor/three.js/Stats.js"></script>
+		<script src="vendor/three.js/ShaderExtras.js"></script>
+		
+		<script src="vendor/three.js/postprocessing/RenderPass.js"></script>
+		<script src="vendor/three.js/postprocessing/BloomPass.js"></script>
+		<script src="vendor/three.js/postprocessing/ShaderPass.js"></script>
+		<script src="vendor/three.js/postprocessing/EffectComposer.js"></script>
+		<script src="vendor/three.js/postprocessing/DotScreenPass.js"></script>
+		<script src="vendor/three.js/postprocessing/MaskPass.js"></script>
+
+		<script src="vendor/threex/THREEx.screenshot.js"></script>
+		<script src="vendor/threex/THREEx.FullScreen.js"></script>
+		<script src="vendor/threex/THREEx.WindowResize.js"></script>
+		<script src="vendor/threex/THREEx.KeyboardState.js"></script>
+		<script src="vendor/threex.dragpancontrols.js"></script>
+		<!--
+		<script src="js/tquery-all.js"></script>
+		-->
+
+		<link  href="css/main.css" rel="stylesheet"/>
+	</head>
+<body>
+	<!-- three.js container -->
+    	<div id="container"></div>
+	<!-- info on screen display -->
+	<div id="info">
+		<div class="top">
+			<a href="http://learningthreejs.com/blog/2011/12/20/boilerplate-for-three-js/" target="_blank">LearningThree.js</a>
+			boiler plate for
+			<a href="https://github.com/mrdoob/three.js/" target="_blank">three.js</a>
+		</div>
+		<div class="bottom" id="inlineDoc" >
+			- <i>p</i> for screenshot
+		</div> 
+	</div> 
+
+	<script type="text/javascript">
+		var stats, scene, renderer;
+		var camera, keyboard;
+		var car;
+
+
+		if( !init() )	animate();
+
+		// init the scene
+		function init(){
+			if( Detector.webgl ){
+				renderer = new THREE.WebGLRenderer({
+					antialias		: true,	// to get smoother output
+					preserveDrawingBuffer	: true	// to allow screenshot
+				});
+				renderer.setClearColorHex( 0xFFFFFF, 1 );
+			// uncomment if webgl is required
+			//}else{
+			//	Detector.addGetWebGLMessage();
+			//	return true;
+			}else{
+				renderer	= new THREE.CanvasRenderer();
+			}
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.getElementById('container').appendChild(renderer.domElement);
+
+			
+			// add Stats.js - https://github.com/mrdoob/stats.js
+			stats = new Stats();
+			stats.domElement.style.position	= 'absolute';
+			stats.domElement.style.bottom	= '0px';
+			document.body.appendChild( stats.domElement );
+
+			// create a scene
+			scene = new THREE.Scene();
+
+			// put a camera in the scene
+			camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, 100000 ); //extend the camera out
+			camera.position.set(0, 3, 120);
+			scene.add(camera);
+
+			// create a camera contol
+			//cameraControls	= new THREEx.DragPanControls(camera)
+			keyboard = new THREEx.KeyboardState();
+
+			// transparently support window resize
+			THREEx.WindowResize.bind(renderer, camera);
+			// allow 'p' to make screenshot
+			THREEx.Screenshot.bindKey(renderer);
+			// allow 'f' to go fullscreen where this feature is supported
+			if( THREEx.FullScreen.available() ){
+				THREEx.FullScreen.bindKey();		
+				document.getElementById('inlineDoc').innerHTML	+= "- <i>f</i> for fullscreen";
+			}
+
+			
+			
+			// here you add your objects
+			// - you will most likely replace this part by your own
+			var geometry	= new THREE.TorusGeometry( 1, 0.42 );
+			var material	= new THREE.MeshNormalMaterial();
+			var mesh	= new THREE.Mesh( geometry, material );
+			scene.add( mesh );
+			//turn on shadows
+			renderer.shadowMapEnabled = true;
+			renderer.shadowMapSoft = true;
+			
+			
+			//add skymap
+			//load sky images
+			var urls = [
+			    "images/sky1.png",
+			    "images/sky1.png",
+			    "images/sky1.png",
+			    "images/sky1.png",
+			    "images/sky1.png",
+			    "images/sky1.png",
+			];
+			var textureCube = THREE.ImageUtils.loadTextureCube(urls);
+			//setup the cube shader
+			var shader = THREE.ShaderUtils.lib["cube"];
+			var uniforms = THREE.UniformsUtils.clone(shader.uniforms);
+			uniforms['tCube'].texture = textureCube;
+			var material = new THREE.ShaderMaterial({
+			        fragmentShader : shader.fragmentShader,
+			        vertexShader   : shader.vertexShader,
+			        uniforms       : uniforms
+			});
+			//create a skybox
+			var size = 10000;
+			skyboxMesh = new THREE.Mesh( new THREE.CubeGeometry(size,size,size),material);
+			//IMPORTANT!! draw on the inside instead of outside
+			skyboxMesh.flipSided = true; // you must have this or you won't see anything
+			scene.add(skyboxMesh);
+			
+			
+			//add sunlight
+			var light = new THREE.SpotLight();
+			light.position.set(0,500,0);
+			scene.add(light);
+			
+			//add ground
+			var groundGeo = new THREE.PlaneGeometry(400,400);
+			var grassTex = THREE.ImageUtils.loadTexture('images/grass.png');
+			grassTex.wrapS = THREE.RepeatWrapping;
+			grassTex.wrapT = THREE.RepeatWrapping;
+			grassTex.repeat.x = 256;
+			grassTex.repeat.y = 256;
+			//var groundMat = new THREE.MeshBasicMaterial({color:0xFF66FF});
+			var groundMat = new THREE.MeshBasicMaterial({map:grassTex});
+			var ground = new THREE.Mesh(groundGeo,groundMat);
+			ground.position.y = -1.9; //lower it
+			ground.rotation.x = -Math.PI/2; //-90 degrees around the xaxis
+			//IMPORTANT, draw on both sides
+			ground.doubleSided = true;
+			scene.add(ground);
+			
+			
+			
+			//load a car			
+			//IMPORTANT: be sure to use ./ or it may not load the .bin correctly
+			new THREE.BinaryLoader().load('./VeyronNoUv_bin.js', function(geometry) {
+     	        console.log("got car.js loaded");
+                var material	= new THREE.MeshNormalMaterial();
+                var orange    = new THREE.MeshLambertMaterial( { color: 0x995500, opacity: 1.0, transparent: false } );
+                var mesh	= new THREE.Mesh( geometry, orange );
+                mesh.scale.x = mesh.scale.y = mesh.scale.z = 0.05;
+                scene.add( mesh );
+                car = mesh;
+			        
+			});
+			
+		}
+		
+		
+		var composer;
+		var renderModel;
+
+		// animation loop
+		function animate() {
+
+			// loop on request animation loop
+			// - it has to be at the begining of the function
+			// - see details at http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
+			requestAnimationFrame( animate );
+
+			// do the render
+			render();
+
+			// update stats
+			stats.update();
+		}
+
+		// render the scene
+		function render() {
+
+			// update camera controls
+			//cameraControls.update();
+			
+			if(keyboard.pressed("left")) {
+			    car.rotation.y += 0.01;
+			}
+			if(keyboard.pressed("right")) {
+			    car.rotation.y -= 0.01;
+			}
+			if(keyboard.pressed("up")) {
+			    car.position.z += 1;
+			}
+			if(keyboard.pressed("down")) {
+			    car.position.z -= 1;
+			}
+
+			// actually render the scene
+			renderer.render( scene, camera );
+			
+			
+		}
+	</script>
+</body>
+</html>
