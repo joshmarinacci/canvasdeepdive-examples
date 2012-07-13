@@ -1,0 +1,58 @@
+<html>
+<body>
+
+<h1>Get User Media Test 1</h1>
+
+<p>You will need the latest chrome or opera beta to make this work.</p>
+
+<!-- html tag for video. notice there is no src -->
+<video autoplay></video>
+
+<!-- init webcam -->
+<script language='javascript'>
+console.log("checking for user media: " + navigator.webkitGetUserMedia!=null);
+
+if(navigator.webkitGetUserMedia!=null) {
+    console.log("we have get user media");
+    var options = {
+        video:true,
+        audio:true
+    };
+    
+    //request webcam access
+    navigator.webkitGetUserMedia(options,function(stream) {
+        //get the video tag
+        var video = document.querySelector('video');
+        //turn the stream into a magic URL
+        video.src = window.webkitURL.createObjectURL(stream);
+    },
+    function(e) {
+        console.log("error happened");
+    });
+}
+
+
+</script>
+
+
+<form>
+<input type='button' id='snapshot' value="snapshot"/>
+</form>
+
+<canvas id='canvas' width='100' height='100'></canvas>
+
+
+
+<script language='javascript'>
+document.getElementById('snapshot').onclick = function() {
+    var video = document.querySelector('video');
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+    //draw video at 0,0
+    //ctx.drawImage(video,0,0);
+    //draw video source resized to 100x100
+    ctx.drawImage(video,0,0,100,100);
+}
+</script>
+</body>
+</html>
