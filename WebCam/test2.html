@@ -1,17 +1,16 @@
 <html>
 <body>
 
-<h1>Basic getUserMedia Example</h1>
+<h1>WebCam Snapshot Inverted</h1>
 
-<p>You will need the latest chrome beta to make this work.</p>
+<p>You will need the latest chrome beta for htis to work.</p>
 
 <!-- html tag for video. notice there is no src -->
 <video autoplay></video>
 
 <!-- init webcam -->
 <script language='javascript'>
-console.log("checking for user media: " + navigator.webkitGetUserMedia!=null);
-
+//hook up the webcam
 if(navigator.webkitGetUserMedia!=null) {
     console.log("we have get user media");
     var options = {
@@ -39,7 +38,7 @@ if(navigator.webkitGetUserMedia!=null) {
 <input type='button' id='snapshot' value="snapshot"/>
 </form>
 
-<canvas id='canvas' width='100' height='100'></canvas>
+<canvas id='canvas' width='640' height='480'></canvas>
 
 
 
@@ -48,10 +47,20 @@ document.getElementById('snapshot').onclick = function() {
     var video = document.querySelector('video');
     var canvas = document.getElementById('canvas');
     var ctx = canvas.getContext('2d');
-    //draw video at 0,0
-    //ctx.drawImage(video,0,0);
-    //draw video source resized to 100x100
-    ctx.drawImage(video,0,0,100,100);
+    ctx.drawImage(video,0,0);
+    //get the canvas data 
+    var data = ctx.getImageData(0,0,canvas.width,canvas.height); 
+    //invert each pixel 
+    for(n=0; n<data.width*data.height; n++) { 
+        var index = n*4;  
+        data.data[index+0] = 255-data.data[index+0]; 
+        data.data[index+1] = 255-data.data[index+1]; 
+        data.data[index+2] = 255-data.data[index+2]; 
+        //don't touch the alpha 
+    } 
+     
+    //set the data back 
+    ctx.putImageData(data,0,0);    
 }
 </script>
 </body>
