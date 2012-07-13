@@ -1,0 +1,91 @@
+<html>
+<head>
+<script type='text/javascript'>
+
+
+var ctx; //audio context
+var buf; //audio buffer
+var fft; //fft audio node
+var samples = 128;
+var setup = false; //indicate if audio is set up yet
+
+
+//init the sound system
+function init() {
+    console.log("in init");
+    try {
+        ctx = new webkitAudioContext(); //is there a better API for this?
+        setupCanvas();
+        loadFile();
+    } catch(e) {
+        alert('you need webaudio support' + e);
+    }
+}
+window.addEventListener('load',init,false);
+
+//load the mp3 file
+function loadFile() {
+    var req = new XMLHttpRequest();
+    req.open("GET","music.mp3",true);
+    //we can't use jquery because we need the arraybuffer type
+    req.responseType = "arraybuffer";
+    req.onload = function() {
+        //decode the loaded data
+        ctx.decodeAudioData(req.response, function(buffer) {
+            buf = buffer;
+            play();
+        });
+    };
+    req.send();
+}
+
+//play the loaded file
+function play() {
+    //create a source node from the buffer
+    var src = ctx.createBufferSource(); 
+    src.buffer = buf;
+    
+    //create fft
+    fft = ctx.createAnalyser();
+    fft.fftSize = samples;
+    
+    //connect them up into a chain
+    src.connect(fft);
+    fft.connect(ctx.destination);
+    
+    //play immediately
+    src.noteOn(0);
+    setup = true;
+}
+
+var gfx;
+function setupCanvas() {
+    var canvas = document.getElementById('canvas');
+    gfx = canvas.getContext('2d');
+    update();
+    webkitRequestAnimationFrame(update);
+}
+
+function update() {
+    webkitRequestAnimationFrame(update);
+    if(!setup) return;
+    gfx.clearRect(0,0,800,600);
+    gfx.fillStyle = 'gray';
+    gfx.fillRect(0,0,800,600);
+    
+    var data = new Uint8Array(samples);
+    fft.getByteFrequencyData(data);
+    gfx.fillStyle = 'red';
+    for(var i=0; i<data.length; i++) {
+        gfx.fillRect(100+i*4,100+256-data[i]*2,3,100);
+    }
+    
+}
+
+</script>
+</head>
+<body>
+<canvas id='canvas' width='800px' height='600px'></canvas>
+
+</body>
+</html>
