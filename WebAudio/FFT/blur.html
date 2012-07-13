@@ -1,0 +1,154 @@
+<html>
+<head>
+<script type='text/javascript'>
+
+
+var ctx; //audio context
+var buf; //audio buffer
+var fft; //fft audio node
+var samples = 128;
+var setup = false; //indicate if audio is set up yet
+
+
+//init the sound system
+function init() {
+    console.log("in init");
+    try {
+        ctx = new webkitAudioContext(); //is there a better API for this?
+        setupCanvas();
+        loadFile();
+    } catch(e) {
+        alert('you need webaudio support' + e);
+    }
+}
+window.addEventListener('load',init,false);
+
+//load the mp3 file
+function loadFile() {
+    var req = new XMLHttpRequest();
+    req.open("GET","music.mp3",true);
+    //we can't use jquery because we need the arraybuffer type
+    req.responseType = "arraybuffer";
+    req.onload = function() {
+        //decode the loaded data
+        ctx.decodeAudioData(req.response, function(buffer) {
+            buf = buffer;
+            play();
+        });
+    };
+    req.send();
+}
+
+//play the loaded file
+function play() {
+    //create a source node from the buffer
+    var src = ctx.createBufferSource(); 
+    src.buffer = buf;
+    
+    //create fft
+    fft = ctx.createAnalyser();
+    fft.fftSize = samples;
+    
+    //connect them up into a chain
+    src.connect(fft);
+    fft.connect(ctx.destination);
+    
+    //play immediately
+    src.noteOn(0);
+    setup = true;
+}
+
+var gfx;
+function setupCanvas() {
+    var canvas = document.getElementById('canvas');
+    gfx = canvas.getContext('2d');
+    webkitRequestAnimationFrame(update);
+}
+
+
+var w = 800;
+var h = 600;
+var buffer1 = null;
+var buffer2 = null;
+var rtick = 0;
+var gtick = 0;
+var btick = 0;
+
+function update() {
+    webkitRequestAnimationFrame(update);
+    if(!setup) return;
+    
+    if(!buffer1) {
+        //console.log('creating');
+        buffer1 = document.createElement("canvas");
+        buffer1.width = w;
+        buffer1.height = h;
+        
+        buffer2 = document.createElement("canvas");
+        buffer2.width = w;
+        buffer2.height = h;
+    }
+
+    var bctx1 = buffer1.getContext('2d');
+    var bctx2 = buffer2.getContext('2d');
+    
+    //copy buffer1 to buffer2
+    bctx2.drawImage(buffer1,0,0);
+    
+
+    //get sound data
+    var data = new Uint8Array(samples);
+    fft.getByteFrequencyData(data);
+
+    //draw music into buffer 2
+    bctx2.fillStyle = "red";
+    //bctx2.fillRect(50,50,100,100);
+    rtick = (rtick+1)%255;
+    gtick = (gtick+2)%255;
+    btick = (btick+3)%255;
+    bctx2.strokeStyle = "rgb("+rtick+","+gtick+","+btick+")";
+    bctx2.beginPath();
+    
+    var s = data.length/2*4;
+    
+    var l = w/2-s/2;
+    var t = h/2-256/2;
+    bctx2.moveTo(l, t+128-data[0]+100);
+    
+    for(var i=0; i<data.length/2; i++) {
+        bctx2.lineTo(      l+i*4, t+128-data[i]+100);
+    }
+    
+    for(var i=(data.length/2)-1; i>=0; i--) {
+        var max = data.length/2-1;
+        bctx2.lineTo(l+(max-i)*4, t+128-data[i]+100);
+    }
+    bctx2.stroke();
+    
+    //copy buffer2 to buffer1, stretched
+    //draw more onto buffer
+    bctx1.drawImage(buffer2, 0,0,w,h,  -5,-5, w+10,h+10);
+    //draw buffer1 back to screen
+    gfx.drawImage(buffer1,0,0);
+
+        /*
+        gfx.clearRect(0,0,800,600);
+    gfx.fillStyle = 'gray';
+    gfx.fillRect(0,0,800,600);
+    
+    var data = new Uint8Array(samples);
+    fft.getByteFrequencyData(data);
+    gfx.fillStyle = 'red';
+    for(var i=0; i<data.length; i++) {
+        gfx.fillRect(100+i*4,100+256-data[i]*2,3,100);
+    }*/
+    
+}
+
+</script>
+</head>
+<body>
+<canvas id='canvas' width='800px' height='600px'></canvas>
+
+</body>
+</html>
