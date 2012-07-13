@@ -124,6 +124,7 @@
 			    "images/sky1.png",
 			];
 			var textureCube = THREE.ImageUtils.loadTextureCube(urls);
+			
 			//setup the cube shader
 			var shader = THREE.ShaderUtils.lib["cube"];
 			var uniforms = THREE.UniformsUtils.clone(shader.uniforms);
@@ -133,9 +134,11 @@
 			        vertexShader   : shader.vertexShader,
 			        uniforms       : uniforms
 			});
+			
 			//create a skybox
 			var size = 10000;
-			skyboxMesh = new THREE.Mesh( new THREE.CubeGeometry(size,size,size),material);
+			skyboxMesh = new THREE.Mesh( 
+			    new THREE.CubeGeometry(size,size,size),material);
 			//IMPORTANT!! draw on the inside instead of outside
 			skyboxMesh.flipSided = true; // you must have this or you won't see anything
 			scene.add(skyboxMesh);
@@ -147,7 +150,6 @@
 			scene.add(light);
 			
 			//add ground
-			var groundGeo = new THREE.PlaneGeometry(400,400);
 			var grassTex = THREE.ImageUtils.loadTexture('images/grass.png');
 			grassTex.wrapS = THREE.RepeatWrapping;
 			grassTex.wrapT = THREE.RepeatWrapping;
@@ -155,6 +157,8 @@
 			grassTex.repeat.y = 256;
 			//var groundMat = new THREE.MeshBasicMaterial({color:0xFF66FF});
 			var groundMat = new THREE.MeshBasicMaterial({map:grassTex});
+			
+			var groundGeo = new THREE.PlaneGeometry(400,400);
 			var ground = new THREE.Mesh(groundGeo,groundMat);
 			ground.position.y = -1.9; //lower it
 			ground.rotation.x = -Math.PI/2; //-90 degrees around the xaxis
@@ -167,14 +171,12 @@
 			//load a car			
 			//IMPORTANT: be sure to use ./ or it may not load the .bin correctly
 			new THREE.BinaryLoader().load('./VeyronNoUv_bin.js', function(geometry) {
-     	        console.log("got car.js loaded");
                 var material	= new THREE.MeshNormalMaterial();
                 var orange    = new THREE.MeshLambertMaterial( { color: 0x995500, opacity: 1.0, transparent: false } );
                 var mesh	= new THREE.Mesh( geometry, orange );
                 mesh.scale.x = mesh.scale.y = mesh.scale.z = 0.05;
                 scene.add( mesh );
                 car = mesh;
-			        
 			});
 			
 		}
@@ -198,6 +200,7 @@
 			stats.update();
 		}
 
+		var angle = Math.PI/2;
 		// render the scene
 		function render() {
 
@@ -205,22 +208,24 @@
 			//cameraControls.update();
 			
 			if(keyboard.pressed("left")) {
-			    car.rotation.y += 0.01;
+			    car.rotation.y += 0.1;
+			    angle += 0.1;
 			}
 			if(keyboard.pressed("right")) {
-			    car.rotation.y -= 0.01;
+			    car.rotation.y -= 0.1;
+			    angle -= 0.1;
 			}
 			if(keyboard.pressed("up")) {
-			    car.position.z += 1;
+			    car.position.z -= Math.sin(-angle);
+			    car.position.x -= Math.cos(-angle);
 			}
 			if(keyboard.pressed("down")) {
-			    car.position.z -= 1;
+			    car.position.z += Math.sin(-angle);
+			    car.position.x += Math.cos(-angle);
 			}
 
 			// actually render the scene
 			renderer.render( scene, camera );
-			
-			
 		}
 	</script>
 </body>

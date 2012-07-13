@@ -19,7 +19,7 @@ function init() {
 }
 window.addEventListener('load',init,false);
 
-//load the mp3 file
+//load and decode mp3 file
 function loadFile() {
     var req = new XMLHttpRequest();
     req.open("GET","music.mp3",true);

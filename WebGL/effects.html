@@ -47,10 +47,8 @@
 	<script type="text/javascript">
 		var stats, scene, renderer;
 		var camera, cameraControl;
+		var teapot;
 		
-		var postprocessing = {};
-
-
 		if( !init() )	animate();
 
 		// init the scene
@@ -104,6 +102,7 @@
 			var geometry	= new THREE.TorusGeometry( 1, 0.42 );
 			var material	= new THREE.MeshNormalMaterial();
 			var mesh	= new THREE.Mesh( geometry, material );
+			mesh.rotation.y = Math.PI/2; //90 degrees
 			//scene.add( mesh );
 			
 			new THREE.JSONLoader().load('teapot.js', function(geometry) {
@@ -111,6 +110,7 @@
                 var material	= new THREE.MeshNormalMaterial();
                 var mesh	= new THREE.Mesh( geometry, material );
                 scene.add( mesh );
+                teapot = mesh;
 			        
 			});
 			
@@ -126,18 +126,16 @@
 		//ADDED for post processing
 		function initPostProcessing() {
 		    
-		    var w = window.innerWidth/2;
-		    var h = window.innerHeight/2;            
-		    var params = { minFilter: THREE.LinearFilter, magFilter:THREE.LinearFilter, format: THREE.RGBFormat, stencilBuffer:true};
-		    composer = new THREE.EffectComposer(renderer);//,new THREE.WebGLRenderTarget(w*2,h*2,params));
+		    composer = new THREE.EffectComposer(renderer);
 
             renderModel = new THREE.RenderPass(scene,camera);		    
             renderModel.renderToScreen = false;
 		    composer.addPass(renderModel);
 		    
-		    var effectDotScreen = new THREE.DotScreenPass(new THREE.Vector2(0,0), 0.5, 0.8);
-		    composer.addPass(effectDotScreen);
+		    var effectDotScreen = new THREE.DotScreenPass(
+		        new THREE.Vector2(0,0), 0.5, 0.8);
 		    effectDotScreen.renderToScreen = true;
+		    composer.addPass(effectDotScreen);
 		}		    
 
 		// animation loop
@@ -160,6 +158,7 @@
 
 			// update camera controls
 			cameraControls.update();
+			teapot.rotation.y += 0.01;
 
 			// actually render the scene
 			//renderer.render( scene, camera );
