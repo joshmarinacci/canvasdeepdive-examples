@@ -26,7 +26,7 @@ window.addEventListener('load',init,false);
 //load the mp3 file
 function loadFile() {
     var req = new XMLHttpRequest();
-    req.open("GET","music.mp3",true);
+    req.open("GET","songx.mp3",true);
     //we can't use jquery because we need the arraybuffer type
     req.responseType = "arraybuffer";
     req.onload = function() {
@@ -37,6 +37,7 @@ function loadFile() {
         });
     };
     req.send();
+    console.log("loading the song");
 }
 
 //play the loaded file
@@ -84,7 +85,9 @@ function update() {
 </script>
 </head>
 <body>
-<canvas id='canvas' width='800px' height='600px'></canvas>
+<h1>FFT Demo</h1>
+<h4>song clip from <a href='http://chordpunch.com/releases/cp0x08/'>chordpunch: Slub Live in Paris</a></h4>
+<canvas id='canvas' width='800px' height='500px'></canvas>
 
 </body>
 </html>

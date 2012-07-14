@@ -22,7 +22,7 @@ window.addEventListener('load',init,false);
 //load and decode mp3 file
 function loadFile() {
     var req = new XMLHttpRequest();
-    req.open("GET","music.mp3",true);
+    req.open("GET","song.mp3",true);
     req.responseType = "arraybuffer";
     req.onload = function() {
         //decode the loaded data
