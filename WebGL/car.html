@@ -206,7 +206,19 @@
 
 			// update camera controls
 			//cameraControls.update();
-			
+			if(keyboard.pressed("left")) {
+			    car.rotation.y += 0.1;
+			}
+			if(keyboard.pressed("right")) {
+			    car.rotation.y -= 0.1;
+			}
+			if(keyboard.pressed("up")) {
+			    car.position.z -= 1.0;
+			}
+			if(keyboard.pressed("down")) {
+			    car.position.z += 1.0;
+			}
+/*			
 			if(keyboard.pressed("left")) {
 			    car.rotation.y += 0.1;
 			    angle += 0.1;
@@ -223,7 +235,7 @@
 			    car.position.z += Math.sin(-angle);
 			    car.position.x += Math.cos(-angle);
 			}
-
+*/
 			// actually render the scene
 			renderer.render( scene, camera );
 		}
